@@ -161,7 +161,7 @@ for allocation in allocations:
     print(f"{allocation.location.name}: {allocation.allocated_amount}")
 ```
 
-##### get_allocation_summary() -> Dict[str, any]
+##### get_allocation_summary() -> Dict[str, Any]
 
 Get a summary of the allocation results.
 

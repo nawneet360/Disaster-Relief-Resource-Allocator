@@ -2,7 +2,7 @@
 Resource Allocator module for optimizing disaster relief resource distribution.
 """
 
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
 from .resource import Resource, ResourceType
 from .location import Location, SeverityLevel
 
@@ -85,7 +85,7 @@ class ResourceAllocator:
         
         return self.allocations
     
-    def get_allocation_summary(self) -> Dict[str, any]:
+    def get_allocation_summary(self) -> Dict[str, Any]:
         """
         Get a summary of the allocation results.
         
