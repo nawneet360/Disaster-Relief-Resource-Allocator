@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disaster Relief Resource Allocator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo::before {
+            content: "🚨";
+            margin-right: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><rect fill="%23f39c12" width="1200" height="600"/><circle fill="%23e74c3c" cx="200" cy="150" r="50"/><circle fill="%233498db" cx="800" cy="300" r="80"/><circle fill="%2327ae60" cx="1000" cy="100" r="60"/></svg>');
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .hero-content p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .cta-button {
+            background: #3498db;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .cta-button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section {
+            padding: 4rem 0;
+        }
+
+        .section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #2c3e50;
+        }
+
+        .features {
+            background: #f8f9fa;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            color: #e74c3c;
+            margin-bottom: 1rem;
+        }
+
+        .dashboard {
+            background: white;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .dashboard-panel {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            border-left: 5px solid #e74c3c;
+        }
+
+        .dashboard-panel h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .resource-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .status-indicator {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-available { background: #d4edda; color: #155724; }
+        .status-critical { background: #f8d7da; color: #721c24; }
+        .status-moderate { background: #fff3cd; color: #856404; }
+
+        .alert-system {
+            background: #e74c3c;
+            color: white;
+            padding: 2rem 0;
+        }
+
+        .alert-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .alert-card {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #fff;
+        }
+
+        .alert-level {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .request-form {
+            background: #f8f9fa;
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #e74c3c;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: #e74c3c;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section a {
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-section a:hover {
+            color: #e74c3c;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-content p {
+                font-size: 1.1rem;
+            }
+
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+
+            .section {
+                padding: 2rem 0;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feature-card,
+        .dashboard-panel,
+        .alert-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .progress-bar {
+            background: #dee2e6;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .progress-high { background: #28a745; }
+        .progress-medium { background: #ffc107; }
+        .progress-low { background: #dc3545; }
+
+        .interactive-map {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s;
+        }
+
+        .map-placeholder {
+            height: 300px;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .map-dot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .map-dot:hover {
+            transform: scale(1.5);
+            z-index: 10;
+        }
+
+        .emergency-dot { background: #e74c3c; top: 30%; left: 25%; }
+        .medical-dot { background: #27ae60; top: 60%; left: 70%; }
+        .food-dot { background: #f39c12; top: 45%; left: 45%; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        .stats-counter {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .notification-badge {
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-5px); }
+            60% { transform: translateY(-3px); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-modal:hover {
+            color: #e74c3c;
+        }
+
+        .live-ticker {
+            background: #2c3e50;
+            color: white;
+            padding: 0.5rem 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .ticker-text {
+            display: inline-block;
+            animation: scroll-left 30s linear infinite;
+        }
+
+        @keyframes scroll-left {
+            0% { transform: translate3d(100%, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+
+        .emergency-button {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: pulse-button 2s infinite;
+            z-index: 1500;
+        }
+
+        @keyframes pulse-button {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        .weather-widget {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .weather-widget:hover {
+            transform: scale(1.02);
+        }
+
+        .toast {
+            position: fixed;
+            top: 100px;
+            right: 2rem;
+            background: #28a745;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateX(100%);
+            transition: transform 0.3s;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .resource-card {
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .resource-card:hover {
+            background: #e9ecef;
+            transform: translateX(10px);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">Disaster Relief Allocator</div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#dashboard">Dashboard</a></li>
+                    <li><a href="#request">Request Aid</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="live-ticker">
+        <div class="ticker-text">
+            🚨 BREAKING: Severe weather alert for Northern Region • 🏥 Medical teams deployed to Eastern District • 🚁 Helicopter rescue operations ongoing in District C • ⚡ Power restored to 85% of affected areas • 📦 Emergency supplies distributed to 15,000 people
+        </div>
+    </div>
+
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Emergency Response Made Efficient</h1>
+            <p>Our smart platform helps authorities quickly allocate food, medical aid, and rescue teams during disasters, ensuring timely support reaches affected communities when it matters most.</p>
+            <a href="#dashboard" class="cta-button">Access Emergency Dashboard</a>
+        </div>
+    </section>
+
+    <section id="features" class="section features">
+        <div class="container">
+            <h2>Platform Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🚑</div>
+                    <h3>Medical Aid Coordination</h3>
+                    <p>Real-time tracking and allocation of medical supplies, ambulances, and healthcare personnel to areas of greatest need.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🍞</div>
+                    <h3>Food Distribution</h3>
+                    <p>Intelligent food supply management ensuring nutritious meals reach affected populations efficiently and equitably.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👨‍🚒</div>
+                    <h3>Rescue Team Deployment</h3>
+                    <p>Strategic deployment of rescue teams based on real-time data, terrain analysis, and emergency severity levels.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Data Analytics</h3>
+                    <p>Advanced analytics and AI-powered insights for predictive resource allocation and emergency response optimization.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Mobile Integration</h3>
+                    <p>Mobile-first platform enabling field teams to update status, request resources, and coordinate activities in real-time.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🗺️</div>
+                    <h3>Geographic Mapping</h3>
+                    <p>Interactive mapping system showing affected areas, resource locations, and optimal distribution routes.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="dashboard" class="section dashboard">
+        <div class="container">
+            <h2>Emergency Response Dashboard</h2>
+            
+            <div class="features-grid" style="margin-bottom: 3rem;">
+                <div class="feature-card" onclick="showModal('peopleHelped')">
+                    <div class="stats-counter" data-target="23847">0</div>
+                    <h3>People Helped Today</h3>
+                    <span class="notification-badge">Live</span>
+                </div>
+                <div class="feature-card" onclick="showModal('activeTeams')">
+                    <div class="stats-counter" data-target="156">0</div>
+                    <h3>Active Response Teams</h3>
+                </div>
+                <div class="feature-card" onclick="showModal('resources')">
+                    <div class="stats-counter" data-target="89">0</div>
+                    <h3>Resource Locations</h3>
+                </div>
+            </div>
+
+            <div class="interactive-map">
+                <h3>Live Emergency Map</h3>
+                <div class="map-placeholder" onclick="showModal('map')">
+                    <span>🗺️ Click to view interactive emergency map</span>
+                    <div class="map-dot emergency-dot" title="Emergency Zone - Flood Relief" onclick="showEmergencyDetails(event, 'flood')"></div>
+                    <div class="map-dot medical-dot" title="Medical Station - Field Hospital" onclick="showEmergencyDetails(event, 'medical')"></div>
+                    <div class="map-dot food-dot" title="Food Distribution Center" onclick="showEmergencyDetails(event, 'food')"></div>
+                </div>
+            </div>
+
+            <div class="weather-widget" onclick="toggleWeatherDetails()">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3>🌦️ Current Weather Conditions</h3>
+                        <p>Partly Cloudy • 22°C • Wind: 15 km/h</p>
+                    </div>
+                    <div style="font-size: 3rem;">⛅</div>
+                </div>
+                <div id="weather-details" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.3);">
+                    <p><strong>Forecast:</strong> Rain expected in 3 hours - Consider indoor operations</p>
+                    <p><strong>Visibility:</strong> 8 km • <strong>Humidity:</strong> 65% • <strong>Pressure:</strong> 1013 hPa</p>
+                </div>
+            </div>
+
+            <div class="dashboard-container">
+                <div class="dashboard-panel">
+                    <h3>Resource Availability</h3>
+                    <div class="resource-item resource-card" onclick="updateResource('medical')">
+                        <span>Medical Kits</span>
+                        <div>
+                            <span class="status-indicator status-available" id="medical-count">Available: 847</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill progress-high" id="medical-progress" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="resource-item resource-card" onclick="updateResource('food')">
+                        <span>Food Packages</span>
+                        <div>
+                            <span class="status-indicator status-moderate" id="food-count">Available: 1,245</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill progress-medium" id="food-progress" style="width: 62%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="resource-item resource-card" onclick="updateResource('teams')">
+                        <span>Rescue Teams</span>
+                        <div>
+                            <span class="status-indicator status-critical" id="teams-count">Available: 23</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill progress-low" id="teams-progress" style="width: 38%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="resource-item resource-card" onclick="updateResource('vehicles')">
+                        <span>Vehicles</span>
+                        <div>
+                            <span class="status-indicator status-available" id="vehicles-count">Available: 156</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill progress-high" id="vehicles-progress" style="width: 78%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-panel">
+                    <h3>Active Deployments</h3>
+                    <div class="resource-item resource-card" onclick="showDeploymentDetails('district-a')">
+                        <span>District A - Flood Relief</span>
+                        <span class="status-indicator status-critical">High Priority</span>
+                    </div>
+                    <div class="resource-item resource-card" onclick="showDeploymentDetails('district-b')">
+                        <span>District B - Medical Emergency</span>
+                        <span class="status-indicator status-moderate">Medium Priority</span>
+                    </div>
+                    <div class="resource-item resource-card" onclick="showDeploymentDetails('district-c')">
+                        <span>District C - Evacuation</span>
+                        <span class="status-indicator status-critical">High Priority</span>
+                    </div>
+                    <div class="resource-item resource-card" onclick="showDeploymentDetails('district-d')">
+                        <span>District D - Supply Drop</span>
+                        <span class="status-indicator status-available">Completed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section alert-system">
+        <div class="container">
+            <h2>Emergency Alerts</h2>
+            <div class="alert-grid">
+                <div class="alert-card">
+                    <div class="alert-level">Critical Alert</div>
+                    <h3>Severe Flooding - Northern Region</h3>
+                    <p>Immediate evacuation required. 15,000 people affected. Rescue teams and medical aid urgently needed.</p>
+                    <small>2 hours ago</small>
+                </div>
+                <div class="alert-card">
+                    <div class="alert-level">High Priority</div>
+                    <h3>Medical Supply Shortage</h3>
+                    <p>Critical shortage of medical supplies in eastern districts. Additional inventory deployment recommended.</p>
+                    <small>4 hours ago</small>
+                </div>
+                <div class="alert-card">
+                    <div class="alert-level">Medium Priority</div>
+                    <h3>Food Distribution Update</h3>
+                    <p>Food distribution in southern area completed successfully. 8,500 people provided with relief supplies.</p>
+                    <small>6 hours ago</small>
+                </div>
+                <div class="alert-card">
+                    <div class="alert-level">Information</div>
+                    <h3>Weather Update</h3>
+                    <p>Weather conditions improving in western regions. Safe to resume outdoor relief operations.</p>
+                    <small>8 hours ago</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="request" class="section request-form">
+        <div class="container">
+            <h2>Request Emergency Aid</h2>
+            <div class="form-container">
+                <form>
+                    <div class="form-group">
+                        <label for="location">Location/District</label>
+                        <input type="text" id="location" name="location" required placeholder="Enter affected location">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="emergency-type">Type of Emergency</label>
+                        <select id="emergency-type" name="emergency-type" required>
+                            <option value="">Select Emergency Type</option>
+                            <option value="flood">Flood</option>
+                            <option value="earthquake">Earthquake</option>
+                            <option value="fire">Fire</option>
+                            <option value="medical">Medical Emergency</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="priority">Priority Level</label>
+                        <select id="priority" name="priority" required>
+                            <option value="">Select Priority</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="affected-people">Number of People Affected</label>
+                        <input type="number" id="affected-people" name="affected-people" required placeholder="Enter number">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="resources-needed">Resources Needed</label>
+                        <textarea id="resources-needed" name="resources-needed" rows="4" required placeholder="Describe specific resources needed (medical supplies, food, rescue teams, etc.)"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="contact">Contact Information</label>
+                        <input type="text" id="contact" name="contact" required placeholder="Phone number or radio frequency">
+                    </div>
+                    
+                    <button type="submit" class="cta-button">Submit Emergency Request</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact" class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Emergency Contacts</h3>
+                    <ul>
+                        <li><a href="tel:911">Emergency: 911</a></li>
+                        <li><a href="tel:1800-RELIEF">Relief Hotline: 1-800-RELIEF</a></li>
+                        <li><a href="mailto:emergency@relief.gov">Email: emergency@relief.gov</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#dashboard">Dashboard</a></li>
+                        <li><a href="#request">Request Aid</a></li>
+                        <li><a href="#">Volunteer</a></li>
+                        <li><a href="#">Donate</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="#">Emergency Preparedness</a></li>
+                        <li><a href="#">Training Materials</a></li>
+                        <li><a href="#">API Documentation</a></li>
+                        <li><a href="#">System Status</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>About</h3>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Accessibility</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div style="border-top: 1px solid #34495e; padding-top: 1rem; margin-top: 2rem;">
+                <p>&copy; 2024 Disaster Relief Resource Allocator. Built for emergency response and community safety.</p>
+            </div>
+        </div>
+    </footer>
+
+    <button class="emergency-button" onclick="quickEmergencyReport()" title="Quick Emergency Report">
+        🚨
+    </button>
+
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div id="modal-body">
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">
+        <div id="toast-message"></div>
+    </div>
+
+    <script>
+        let updateInterval;
+
+        function animateCounters() {
+            document.querySelectorAll('.stats-counter').forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const current = parseInt(counter.innerText);
+                const increment = target / 50;
+                
+                if (current < target) {
+                    counter.innerText = Math.ceil(current + increment);
+                    setTimeout(() => animateCounters(), 50);
+                }
+            });
+        }
+
+        function showModal(type) {
+            const modal = document.getElementById('infoModal');
+            const modalBody = document.getElementById('modal-body');
+            
+            let content = '';
+            switch(type) {
+                case 'peopleHelped':
+                    content = `
+                        <h2>📊 People Helped Today</h2>
+                        <div style="margin: 2rem 0;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px;">
+                                    <h3>Medical Aid</h3>
+                                    <p style="font-size: 1.5rem; color: #27ae60;">8,425 people</p>
+                                </div>
+                                <div style="background: #fff3cd; padding: 1rem; border-radius: 8px;">
+                                    <h3>Food Distribution</h3>
+                                    <p style="font-size: 1.5rem; color: #856404;">12,245 people</p>
+                                </div>
+                                <div style="background: #d1ecf1; padding: 1rem; border-radius: 8px;">
+                                    <h3>Evacuation</h3>
+                                    <p style="font-size: 1.5rem; color: #0c5460;">2,177 people</p>
+                                </div>
+                                <div style="background: #f8d7da; padding: 1rem; border-radius: 8px;">
+                                    <h3>Emergency Shelter</h3>
+                                    <p style="font-size: 1.5rem; color: #721c24;">1,000 people</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'map':
+                    content = `
+                        <h2>🗺️ Interactive Emergency Map</h2>
+                        <div style="background: linear-gradient(45deg, #3498db, #2980b9); height: 400px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; position: relative;">
+                            <h3>Emergency Zones Overview</h3>
+                            <div style="position: absolute; top: 20%; left: 20%; background: #e74c3c; padding: 0.5rem; border-radius: 4px;">
+                                <small>🚨 Flood Zone - 15,000 affected</small>
+                            </div>
+                            <div style="position: absolute; bottom: 30%; right: 25%; background: #27ae60; padding: 0.5rem; border-radius: 4px;">
+                                <small>🏥 Medical Station - Active</small>
+                            </div>
+                            <div style="position: absolute; top: 50%; left: 50%; background: #f39c12; padding: 0.5rem; border-radius: 4px;">
+                                <small>🍞 Food Center - Operating</small>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <button onclick="showToast('Map data updated successfully!')" style="background: #27ae60; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Refresh Data</button>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            modalBody.innerHTML = content;
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+
+    
+        function showEmergencyDetails(event, type) {
+            event.stopPropagation();
+            let details = {
+                flood: '🌊 Flood Emergency - 15,000 people affected, 45 rescue teams deployed',
+                medical: '🏥 Medical Station - 24/7 operations, 150 patients treated today',
+                food: '🍞 Food Distribution - 5,000 meals distributed, supplies for 3 days remaining'
+            };
+            showToast(details[type]);
+        }
+
+        function showDeploymentDetails(district) {
+            const details = {
+                'district-a': 'District A: 8 rescue boats, 15 medical personnel, 500 evacuation kits deployed',
+                'district-b': '3 ambulances, 2 medical teams, field hospital established',
+                'district-c': '12 evacuation buses, 25 emergency personnel, temporary shelters ready',
+                'district-d': 'Mission completed: 2,000 food packages distributed successfully'
+            };
+            showToast(details[district]);
+        }
+
+
+        function updateResource(type) {
+            const resources = {
+                medical: { count: 'medical-count', progress: 'medical-progress' },
+                food: { count: 'food-count', progress: 'food-progress' },
+                teams: { count: 'teams-count', progress: 'teams-progress' },
+                vehicles: { count: 'vehicles-count', progress: 'vehicles-progress' }
+            };
+            
+            if (resources[type]) {
+
+                const countEl = document.getElementById(resources[type].count);
+                const currentCount = parseInt(countEl.textContent.match(/\d+/)[0]);
+                const newCount = currentCount + Math.floor(Math.random() * 10) - 5;
+                
+                if (newCount > 0) {
+                    countEl.textContent = countEl.textContent.replace(/\d+/, newCount);
+                    showToast(`${type} resources updated: ${newCount} available`);
+                }
+            }
+        }
+
+        function toggleWeatherDetails() {
+            const details = document.getElementById('weather-details');
+            details.style.display = details.style.display === 'none' ? 'block' : 'none';
+        }
+        function quickEmergencyReport() {
+            const location = prompt('Enter emergency location:');
+            if (location) {
+                showToast(`🚨 Emergency report filed for ${location}. Response team notified!`);
+
+                addNewAlert('URGENT', `Emergency reported at ${location}`, 'Just now');
+            }
+        }
+
+        function addNewAlert(level, message, time) {
+            const alertGrid = document.querySelector('.alert-grid');
+            const newAlert = document.createElement('div');
+            newAlert.className = 'alert-card';
+            newAlert.innerHTML = `
+                <div class="alert-level">${level}</div>
+                <h3>${message}</h3>
+                <small>${time}</small>
+            `;
+            alertGrid.insertBefore(newAlert, alertGrid.firstChild);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.innerHTML = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            setTimeout(animateCounters, 1000);
+            
+            setTimeout(() => {
+                showToast('🚨 Welcome to Emergency Response Dashboard - All systems online');
+            }, 2000);
+        });
+
+     
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const location = formData.get('location');
+            const emergencyType = formData.get('emergency-type');
+            const priority = formData.get('priority');
+            
+            showToast(`🚨 Emergency request submitted for ${location} (${emergencyType}) - Priority: ${priority.toUpperCase()}`);
+            
+            addNewAlert(priority.toUpperCase(), `${emergencyType} emergency at ${location}`, 'Just now');
+
+            this.reset();
+            
+            setTimeout(() => {
+                document.querySelector('.alert-system').scrollIntoView({ behavior: 'smooth' });
+            }, 1000);
+        });
+        function updateDashboard() {
+            const resourceItems = document.querySelectorAll('.resource-item');
+            resourceItems.forEach(item => {
+                const statusIndicator = item.querySelector('.status-indicator');
+                if (statusIndicator && Math.random() > 0.95) {
+                    const currentNumber = parseInt(statusIndicator.textContent.match(/\d+/)[0]);
+                    const change = Math.floor(Math.random() * 10) - 5;
+                    const newNumber = Math.max(0, currentNumber + change);
+                    statusIndicator.textContent = statusIndicator.textContent.replace(/\d+/, newNumber);
+                    
+        
+                    if (Math.random() > 0.8) {
+                        showToast('📊 Resource levels updated automatically');
+                    }
+                }
+            });
+        }
+        setInterval(updateDashboard, 15000);
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('infoModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
